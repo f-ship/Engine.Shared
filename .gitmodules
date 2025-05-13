@@ -1,0 +1,4 @@
+[submodule "Utils"]
+	path = Utils
+	url = https://github.com/f-ship/Engine.Shared.Utils.git
+	branch = main
