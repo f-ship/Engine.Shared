@@ -23,7 +23,6 @@ ktor = "3.0.0"
 ktorClientAndroid = "3.0.0"
 ktorClientOkhttp = "3.0.0"
 lifecycleViewmodelCompose = "2.8.7"
-logback = "1.5.11"
 loggingInterceptor = "4.11.0"
 materialIconsExtended = "1.7.8"
 material3 = "1.3.2"
@@ -54,7 +53,6 @@ kotlinx-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.
 ktor-client-android = { module = "io.ktor:ktor-client-android", version.ref = "ktorClientAndroid" }
 ktor-client-core = { module = "io.ktor:ktor-client-core", version.ref = "ktor" }
 ktor-ktor-client-okhttp = { module = "io.ktor:ktor-client-okhttp", version.ref = "ktorClientOkhttp" }
-logback = { module = "ch.qos.logback:logback-classic", version.ref = "logback" }
 ktor-server-core = { module = "io.ktor:ktor-server-core-jvm", version.ref = "ktor" }
 ktor-server-netty = { module = "io.ktor:ktor-server-netty-jvm", version.ref = "ktor" }
 ktor-server-tests-host = { module = "io.ktor:ktor-server-test-host", version.ref = "ktor" }
