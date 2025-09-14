@@ -1,5 +1,5 @@
-rootProject.name = "shared"
-rootProject.buildFileName = "engine.shared.gradle.kts"
+rootProject.name = "core"
+rootProject.buildFileName = "engine.shared.core.gradle.kts"
 enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
 
 pluginManagement {
@@ -14,8 +14,6 @@ pluginManagement {
         mavenCentral()
         gradlePluginPortal()
     }
-    includeBuild("Utils")
-    includeBuild("Core")
 }
 
 dependencyResolutionManagement {
