@@ -2,3 +2,7 @@
 	path = Utils
 	url = https://github.com/f-ship/Engine.Shared.Utils.git
 	branch = main
+[submodule "Core"]
+    path = Core
+    url = https://github.com/f-ship/Engine.Shared.Core.git
+    branch = main
