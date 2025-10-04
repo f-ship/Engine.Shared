@@ -1,5 +1,7 @@
 package ship.f.engine.shared.sdui2
 
+import androidx.compose.ui.graphics.vector.ImageVector
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import org.jetbrains.compose.resources.Resource
 import ship.f.engine.shared.core.Event
@@ -12,6 +14,7 @@ import ship.f.engine.shared.utils.serverdrivenui2.state.State2
 
 // Events Accepted by SDUISubPub2
 @Serializable
+@SerialName("SDUIInput2")
 data class SDUIInput2(
     val id: MetaId2 = none,
     val states: List<State2> = listOf(),
@@ -19,19 +22,24 @@ data class SDUIInput2(
 ) : Event()
 
 @Serializable
+@SerialName("SDUIReactiveInput2")
 data class SDUIReactiveInput2(
     val id: MetaId2 = none,
     val states: List<StateId2> = listOf(),
     val metas: List<Meta2> = listOf(),
 ) : Event()
 
+// TODO cannot use serializable until we create one for Resource
+// TODO Should probably leave the app to override this method using some kind of lambda
 data class SDUIConfig2(
     val projectName: String,
     val resources: Map<String, Resource> = mapOf(),
+    val vectors: Map<String, ImageVector> = mapOf(),
 ) : Event()
 
 // Events Emitted by SDUISubPub2
 @Serializable
+@SerialName("SDUISideEffect2")
 data class SDUISideEffect2(
     val sideEffect: PopulatedSideEffectMeta2
 ) : Event()

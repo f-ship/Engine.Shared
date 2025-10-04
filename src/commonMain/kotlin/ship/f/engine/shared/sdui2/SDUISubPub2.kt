@@ -1,5 +1,6 @@
 package ship.f.engine.shared.sdui2
 
+import androidx.compose.ui.graphics.vector.ImageVector
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.Resource
 import ship.f.engine.shared.core.ExpectationBuilder
@@ -15,6 +16,7 @@ class SDUISubPub2 : SubPub<SDUIState2>(
     data class SDUIState2(
         val projectName: String? = null,
         val resources: Map<String, Resource> = mapOf(),
+        val vectors: Map<String, ImageVector> = mapOf(),
     ) : State()
 
     override fun initState() = SDUIState2()
@@ -55,7 +57,8 @@ class SDUISubPub2 : SubPub<SDUIState2>(
         ge<SDUIConfig2> {
             state.value = state.value.copy(
                 projectName = it.projectName,
-                resources = it.resources
+                resources = it.resources,
+                vectors = it.vectors,
             )
         }
 
