@@ -41,5 +41,5 @@ data class SDUIConfig2(
 @Serializable
 @SerialName("SDUISideEffect2")
 data class SDUISideEffect2(
-    val sideEffect: PopulatedSideEffectMeta2
+    val sideEffect: PopulatedSideEffectMeta2 = PopulatedSideEffectMeta2(metaId = none)
 ) : Event()
