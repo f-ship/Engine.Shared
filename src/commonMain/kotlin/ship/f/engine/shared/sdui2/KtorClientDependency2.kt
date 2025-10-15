@@ -6,6 +6,7 @@ import io.ktor.client.plugins.websocket.*
 import io.ktor.serialization.kotlinx.json.*
 import ship.f.engine.shared.core.Dependency
 import ship.f.engine.shared.utils.serverdrivenui2.json.json2
+import kotlin.time.Duration.Companion.seconds
 
 class KtorClientDependency2 : Dependency() {
     val client = HttpClient {
@@ -15,7 +16,8 @@ class KtorClientDependency2 : Dependency() {
             )
         }
         install(WebSockets) {
-            pingIntervalMillis = 20_000
+            pingInterval = 15.seconds
+//            maxFrameSize = Long.MAX_VALUE
         }
     }
 }
