@@ -63,6 +63,7 @@ class SDUISubPub2 : SubPub<SDUIState2>(
         }
 
         le<SDUIInput2> {
+            println("Received SDUIInput2 event ${it.id}")
             getDependency(CommonClientDependency2::class).client.run {
                 it.states.forEach { state -> update(state) }
                 it.metas.forEach { meta -> update(meta) }
