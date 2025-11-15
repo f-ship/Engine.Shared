@@ -17,6 +17,7 @@ import ship.f.engine.shared.utils.serverdrivenui2.state.State2
 @SerialName("SDUIInput2")
 data class SDUIInput2(
     val id: MetaId2 = none,
+    val sideEffectId: MetaId2 = none,
     val states: List<State2> = listOf(),
     val metas: List<Meta2> = listOf(),
 ) : Event()
