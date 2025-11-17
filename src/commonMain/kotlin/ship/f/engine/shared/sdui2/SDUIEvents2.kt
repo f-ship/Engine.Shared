@@ -19,7 +19,21 @@ data class SDUIInput2(
     val id: MetaId2 = none,
     val sideEffectId: MetaId2 = none,
     val states: List<State2> = listOf(),
+    val orderedStates: List<StateId2> = listOf(),
     val metas: List<Meta2> = listOf(),
+) : Event()
+
+// Events Emitted by SDUISubPub2
+@Serializable
+@SerialName("SDUISideEffect2")
+data class SDUISideEffect2(
+    val sideEffect: PopulatedSideEffectMeta2,
+) : Event()
+
+@Serializable
+@SerialName("SDUIViewRequest2")
+data class SDUIViewRequest2(
+    val stateId2: StateId2,
 ) : Event()
 
 @Serializable
@@ -36,11 +50,4 @@ data class SDUIConfig2(
     val projectName: String,
     val resources: Map<String, Resource> = mapOf(),
     val vectors: Map<String, ImageVector> = mapOf(),
-) : Event()
-
-// Events Emitted by SDUISubPub2
-@Serializable
-@SerialName("SDUISideEffect2")
-data class SDUISideEffect2(
-    val sideEffect: PopulatedSideEffectMeta2 = PopulatedSideEffectMeta2(metaId = none)
 ) : Event()
