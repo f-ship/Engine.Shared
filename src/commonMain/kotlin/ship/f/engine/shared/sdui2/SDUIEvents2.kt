@@ -34,6 +34,7 @@ data class SDUISideEffect2(
 @SerialName("SDUIViewRequest2")
 data class SDUIViewRequest2(
     val stateId2: StateId2,
+    val requester: String,
 ) : Event()
 
 @Serializable
