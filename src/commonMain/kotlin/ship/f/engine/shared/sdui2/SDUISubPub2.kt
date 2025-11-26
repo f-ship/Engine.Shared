@@ -7,7 +7,9 @@ import ship.f.engine.shared.core.ExpectationBuilder
 import ship.f.engine.shared.core.State
 import ship.f.engine.shared.core.SubPub
 import ship.f.engine.shared.sdui2.SDUISubPub2.SDUIState2
+import ship.f.engine.shared.utils.serverdrivenui2.client3.Client3.Companion.client3
 import ship.f.engine.shared.utils.serverdrivenui2.config.meta.models.NavigationConfig2
+import ship.f.engine.shared.utils.serverdrivenui2.config.meta.models.PopulatedSideEffectMeta2
 
 class SDUISubPub2 : SubPub<SDUIState2>(
     requiredEvents = setOf(SDUIConfig2::class),
@@ -22,7 +24,7 @@ class SDUISubPub2 : SubPub<SDUIState2>(
     override fun initState() = SDUIState2()
     override fun postInit() {
         val client = getDependency(CommonClientDependency2::class).client
-        client.emitSideEffect = { populatedSideEffect ->
+        val handler: (PopulatedSideEffectMeta2) -> Unit = { populatedSideEffect ->
             coroutineScope.launch { // TODO check to see if this is really necessary
                 publish(SDUISideEffect2(populatedSideEffect)) {
                     onceAny(
@@ -42,6 +44,8 @@ class SDUISubPub2 : SubPub<SDUIState2>(
                 }
             }
         }
+        client.emitSideEffect = handler
+        client3.emitSideEffect = handler
     }
 
     override suspend fun onEvent() {
@@ -55,11 +59,17 @@ class SDUISubPub2 : SubPub<SDUIState2>(
 
         le<SDUIInput2> {
             println("Received SDUIInput2 event ${it.id}")
-            getDependency(CommonClientDependency2::class).client.run {
-                it.states.forEach { state -> update(state) }
+//            getDependency(CommonClientDependency2::class).client.run {
+//                it.states.forEach { state -> update(state) }
+//                it.metas.forEach { meta -> update(meta) }
+//                it.metas.filterIsInstance<NavigationConfig2>().forEach { nav -> navigate(nav) }
+//            }
+            client3.run {
+                it.states.forEach { state -> initState(state) }
                 it.metas.forEach { meta -> update(meta) }
-                it.metas.filterIsInstance<NavigationConfig2>().forEach { nav -> navigate(nav) }
+                it.metas.filterIsInstance<NavigationConfig2>().forEach { nav -> navigationEngine.navigate(nav.operation) }
             }
+            client3.commit()
         }
     }
 }
