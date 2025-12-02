@@ -10,6 +10,7 @@ import ship.f.engine.shared.sdui2.SDUISubPub2.SDUIState2
 import ship.f.engine.shared.utils.serverdrivenui2.client3.Client3.Companion.client3
 import ship.f.engine.shared.utils.serverdrivenui2.config.meta.models.NavigationConfig2
 import ship.f.engine.shared.utils.serverdrivenui2.config.meta.models.PopulatedSideEffectMeta2
+import ship.f.engine.shared.utils.serverdrivenui2.ext.sduiLog
 
 class SDUISubPub2 : SubPub<SDUIState2>(
     requiredEvents = setOf(SDUIConfig2::class),
@@ -49,13 +50,22 @@ class SDUISubPub2 : SubPub<SDUIState2>(
     }
 
     override suspend fun onEvent() {
-        ge<SDUIConfig2> {
-            state.value = state.value.copy(
+//        ge<SDUIConfig2> {
+//            state.value = state.value.copy(
+//                projectName = it.projectName,
+//                resources = it.resources,
+//                vectors = it.vectors,
+//            )
+//        }
+
+        state.value = gev2<SDUIConfig2>().firstOrNull()?.let {
+            sduiLog("Received SDUIConfig2 event ${it.projectName} in SDUISubPub2", tag = "EngineX")
+            state.value.copy(
                 projectName = it.projectName,
                 resources = it.resources,
                 vectors = it.vectors,
             )
-        }
+        } ?: state.value
 
         le<SDUIInput2> {
             println("Received SDUIInput2 event ${it.id}")

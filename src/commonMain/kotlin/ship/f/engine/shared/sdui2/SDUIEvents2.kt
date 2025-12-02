@@ -23,6 +23,12 @@ data class SDUIInput2(
     val metas: List<Meta2> = listOf(),
 ) : Event()
 
+@Serializable
+@SerialName("MultiSDUIInput2")
+data class MultiSDUIInput2(
+    val values: List<SDUIInput2>,
+) : Event()
+
 // Events Emitted by SDUISubPub2
 @Serializable
 @SerialName("SDUISideEffect2")
@@ -33,8 +39,12 @@ data class SDUISideEffect2(
 @Serializable
 @SerialName("SDUIViewRequest2")
 data class SDUIViewRequest2(
-    val stateId2: StateId2,
-    val requester: String,
+    val parentZoneStateId2: StateId2? = null,
+    val zoneStateId2: StateId2,
+    val zones: List<String> = listOf(), // TODO to rewrite engine to use a simpler version of scoping
+    val childrenZoneStateIds2: List<StateId2> = listOf(), // TODO to allow sub querying of children zones
+    val requesterId: String, // either userId or system
+    val requestId: String, // Random string ties all returned events to together
 ) : Event()
 
 @Serializable
