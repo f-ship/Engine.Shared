@@ -47,6 +47,7 @@ data class SDUIViewRequest2(
     val childrenZoneStateIds2: List<StateId2> = listOf(), // TODO to allow sub querying of children zones
     val requesterId: String, // either userId or system
     val requestId: String, // Random string ties all returned events to together
+    val context: Map<String, String> = mapOf(),
 ) : Event()
 
 @Serializable
