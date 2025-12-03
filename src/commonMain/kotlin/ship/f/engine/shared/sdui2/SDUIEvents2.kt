@@ -5,6 +5,7 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import org.jetbrains.compose.resources.Resource
 import ship.f.engine.shared.core.Event
+import ship.f.engine.shared.core.defaultScope2
 import ship.f.engine.shared.utils.serverdrivenui2.config.meta.models.Meta2
 import ship.f.engine.shared.utils.serverdrivenui2.config.meta.models.PopulatedSideEffectMeta2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Id2.MetaId2
@@ -27,6 +28,7 @@ data class SDUIInput2(
 @SerialName("MultiSDUIInput2")
 data class MultiSDUIInput2(
     val values: List<SDUIInput2>,
+    val viewRequest: SDUIViewRequest2,
 ) : Event()
 
 // Events Emitted by SDUISubPub2
@@ -41,7 +43,7 @@ data class SDUISideEffect2(
 data class SDUIViewRequest2(
     val parentZoneStateId2: StateId2? = null,
     val zoneStateId2: StateId2,
-    val zones: List<String> = listOf(), // TODO to rewrite engine to use a simpler version of scoping
+    val zones: List<String> = listOf(defaultScope2), // TODO to rewrite engine to use a simpler version of scoping
     val childrenZoneStateIds2: List<StateId2> = listOf(), // TODO to allow sub querying of children zones
     val requesterId: String, // either userId or system
     val requestId: String, // Random string ties all returned events to together
