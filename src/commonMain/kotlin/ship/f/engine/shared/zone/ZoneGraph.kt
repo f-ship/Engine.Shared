@@ -92,9 +92,12 @@ sealed class ZoneGraph {
             if (join.zone is Parent) join.zone.children.values.forEach { child -> toFlatZoneGraph(child, this) }
         }
 
-        fun toDescendants(join: Join, mutableList: MutableList<String> = mutableListOf()){
-            join.zone.name.also { mutableList.add(it) }
-            if (join.zone is Parent) join.zone.children.values.forEach { child -> toDescendants(child, mutableList) }
+        fun toDescendants(join: Join, mutableList: MutableList<String> = mutableListOf(), isTop: Boolean = true){
+            if (isTop && join.mode !is Mode.Include) join.zone.name.also { mutableList.add(it) }
+            if (join.mode is Mode.Include) {
+                join.zone.name.also { mutableList.add(it) }
+                if (join.zone is Parent) join.zone.children.values.forEach { child -> toDescendants(child, mutableList, false) }
+            }
         }
     }
 }

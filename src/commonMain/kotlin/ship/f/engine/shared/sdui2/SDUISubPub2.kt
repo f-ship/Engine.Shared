@@ -68,7 +68,7 @@ class SDUISubPub2 : SubPub<SDUIState2>(
         } ?: state.value
 
         le<SDUIInput2> {
-            sduiLog("Received SDUIInput2 event ${it.id}", tag = "EngineX")
+            sduiLog("Received SDUIInput2 event ${it.id}", tag = "NavigationEngine > SDUIInput2")
 //            getDependency(CommonClientDependency2::class).client.run {
 //                it.states.forEach { state -> update(state) }
 //                it.metas.forEach { meta -> update(meta) }
