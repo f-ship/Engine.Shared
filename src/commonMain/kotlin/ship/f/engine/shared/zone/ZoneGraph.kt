@@ -71,17 +71,22 @@ sealed class ZoneGraph {
     }
 
     sealed class ViewResponse {
+        abstract val sduiInputs: List<SDUIInput2>
+        abstract val originName: String
         data class BuildingViewResponse(
-            val sduiInputs: List<SDUIInput2> = listOf(),
-            val originName: String,
+            override val sduiInputs: List<SDUIInput2> = listOf(),
+            override val originName: String,
         ) : ViewResponse()
 
         data class PendingViewResponse(
-            val sduiInputs: List<SDUIInput2> = listOf(),
-            val originName: String,
+            override val sduiInputs: List<SDUIInput2> = listOf(),
+            override val originName: String,
         ) : ViewResponse()
 
-        data object ReceivedViewResponse : ViewResponse()
+        data class ReceivedViewResponse(
+            override val sduiInputs: List<SDUIInput2> = listOf(),
+            override val originName: String,
+        ) : ViewResponse()
     }
 
 

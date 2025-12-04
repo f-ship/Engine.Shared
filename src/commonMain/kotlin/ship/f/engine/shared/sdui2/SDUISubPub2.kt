@@ -4,6 +4,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.Resource
 import ship.f.engine.shared.core.ExpectationBuilder
+import ship.f.engine.shared.core.ScopedEvent
 import ship.f.engine.shared.core.State
 import ship.f.engine.shared.core.SubPub
 import ship.f.engine.shared.sdui2.SDUISubPub2.SDUIState2
@@ -49,16 +50,8 @@ class SDUISubPub2 : SubPub<SDUIState2>(
         client3.emitSideEffect = handler
     }
 
-    override suspend fun onEvent() {
-//        ge<SDUIConfig2> {
-//            state.value = state.value.copy(
-//                projectName = it.projectName,
-//                resources = it.resources,
-//                vectors = it.vectors,
-//            )
-//        }
-
-        state.value = gev2<SDUIConfig2>().firstOrNull()?.let {
+    override suspend fun ScopedEvent.onEvent() {
+        state.value = getOrRun<SDUIConfig2>().firstOrNull()?.let {
             sduiLog("Received SDUIConfig2 event ${it.projectName} in SDUISubPub2", tag = "EngineX")
             state.value.copy(
                 projectName = it.projectName,
@@ -69,11 +62,6 @@ class SDUISubPub2 : SubPub<SDUIState2>(
 
         le<SDUIInput2> {
             sduiLog("Received SDUIInput2 event ${it.id}", tag = "NavigationEngine > SDUIInput2")
-//            getDependency(CommonClientDependency2::class).client.run {
-//                it.states.forEach { state -> update(state) }
-//                it.metas.forEach { meta -> update(meta) }
-//                it.metas.filterIsInstance<NavigationConfig2>().forEach { nav -> navigate(nav) }
-//            }
             client3.run {
                 it.states.forEach { state -> initState(state) }
                 it.metas.forEach { meta -> update(meta) }
