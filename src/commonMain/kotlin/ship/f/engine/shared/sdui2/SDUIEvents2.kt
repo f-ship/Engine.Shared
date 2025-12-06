@@ -46,6 +46,7 @@ data class SDUIViewRequest2(
     val zones: List<String> = listOf(defaultScope2), // TODO to rewrite engine to use a simpler version of scoping
     val childrenZoneStateIds2: List<StateId2> = listOf(), // TODO to allow sub querying of children zones
     val requesterId: String, // either userId or system
+    val userId: String = "", //This needs to be filled
     val requestId: String, // Random string ties all returned events to together
     val context: Map<String, String> = mapOf(),
 ) : Event()
