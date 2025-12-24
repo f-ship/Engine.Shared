@@ -9,6 +9,7 @@ import ship.f.engine.shared.core.State
 import ship.f.engine.shared.core.SubPub
 import ship.f.engine.shared.sdui2.SDUISubPub2.SDUIState2
 import ship.f.engine.shared.utils.serverdrivenui2.client3.Client3.Companion.client3
+import ship.f.engine.shared.utils.serverdrivenui2.client3.Path3
 import ship.f.engine.shared.utils.serverdrivenui2.config.meta.models.NavigationConfig2
 import ship.f.engine.shared.utils.serverdrivenui2.config.meta.models.PopulatedSideEffectMeta2
 import ship.f.engine.shared.utils.serverdrivenui2.ext.sduiLog
@@ -65,9 +66,13 @@ class SDUISubPub2 : SubPub<SDUIState2>(
             client3.run {
                 it.states.forEach { state -> initState(state) }
                 it.metas.forEach { meta -> update(meta) }
-                it.metas.filterIsInstance<NavigationConfig2>().forEach { nav -> navigationEngine.navigate(nav.operation) }
+                it.metas.filterIsInstance<NavigationConfig2>()
+                    .forEach { nav -> navigationEngine.navigate(nav.operation) }
             }
             client3.commit()
+            sduiLog(client3.reactiveStates.keys.find {
+                (it as? Path3.Local)?.path?.first()?.name == "EventDetail" && it.path.size == 1
+            }, tag = "SDUIInput2 > after commit")
         }
     }
 }
