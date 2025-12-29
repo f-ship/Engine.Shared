@@ -11,7 +11,6 @@ import ship.f.engine.shared.utils.serverdrivenui2.config.meta.models.PopulatedSi
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Id2.MetaId2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Id2.MetaId2.Companion.none
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Id2.StateId2
-import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.TextStyle2.Custom2
 import ship.f.engine.shared.utils.serverdrivenui2.state.State2
 
 // Events Accepted by SDUISubPub2
@@ -30,6 +29,22 @@ data class SDUIInput2(
 data class MultiSDUIInput2(
     val values: List<SDUIInput2>,
     val viewRequest: SDUIViewRequest2,
+) : Event()
+
+@Serializable
+@SerialName("BroadcastSDUIInput2")
+data class BroadcastSDUIInput2(
+    val usersInput: SDUIInput2,
+    val users: List<String>,
+    val userInput: SDUIInput2,
+    val user: String,
+) : Event()
+
+@Serializable
+@SerialName("SendSDUIInput2")
+data class SendSDUIInput2(
+    val input: SDUIInput2,
+    val user: String,
 ) : Event()
 
 // Events Emitted by SDUISubPub2
