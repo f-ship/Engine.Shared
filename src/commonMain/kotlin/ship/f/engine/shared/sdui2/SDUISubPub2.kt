@@ -3,10 +3,7 @@ package ship.f.engine.shared.sdui2
 import androidx.compose.ui.graphics.vector.ImageVector
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.Resource
-import ship.f.engine.shared.core.ExpectationBuilder
-import ship.f.engine.shared.core.ScopedEvent
-import ship.f.engine.shared.core.State
-import ship.f.engine.shared.core.SubPub
+import ship.f.engine.shared.core.*
 import ship.f.engine.shared.sdui2.SDUISubPub2.SDUIState2
 import ship.f.engine.shared.utils.serverdrivenui2.client3.Client3.Companion.client3
 import ship.f.engine.shared.utils.serverdrivenui2.config.meta.models.NavigationConfig2
@@ -15,12 +12,13 @@ import ship.f.engine.shared.utils.serverdrivenui2.ext.sduiLog
 
 class SDUISubPub2 : SubPub<SDUIState2>(
     requiredEvents = setOf(SDUIConfig2::class),
-    nonRequiredEvents = setOf(SDUIInput2::class),
+    nonRequiredEvents = setOf(SDUIInput2::class, ToastEvent::class),
 ) {
     data class SDUIState2(
         val projectName: String? = null,
         val resources: Map<String, Resource> = mapOf(),
         val vectors: Map<String, ImageVector> = mapOf(),
+        val toast: ToastEvent? = null,
     ) : State()
 
     override fun initState() = SDUIState2()
@@ -62,13 +60,30 @@ class SDUISubPub2 : SubPub<SDUIState2>(
 
         le<SDUIInput2> {
             sduiLog("Received SDUIInput2 event ${it.id}", tag = "NavigationEngine > SDUIInput2")
-            client3.run {
-                it.states.forEach { state -> initState(state) }
-                it.metas.forEach { meta -> update(meta) }
-                it.metas.filterIsInstance<NavigationConfig2>()
-                    .forEach { nav -> navigationEngine.navigate(nav.operation) }
+            try {
+                client3.run {
+                    it.states.forEach { state -> initState(state) }
+                    it.metas.forEach { meta -> update(meta) }
+                    it.metas.filterIsInstance<NavigationConfig2>()
+                        .forEach { nav -> navigationEngine.navigate(nav.operation) }
+                }
+                client3.commit()
+            } catch (e: Exception) {
+                sduiLog("SDUIInput2 error > $e", e, tag = "NavigationEngine > SDUIInput2")
+                publish(
+                    ToastEvent(
+                        message = "Sorry this input cannot be performed at this time. Please try again later.",
+                        durationMs = 2000L,
+                        actionText = "Dismiss",
+                        toastType = ToastEvent.ToastType.Warning,
+                    )
+                )
             }
-            client3.commit()
+        }
+
+        le<ToastEvent> {
+            sduiLog("Received ToastEvent event ${it.message}", tag = "EngineX")
+            state.value = state.value.copy(toast = it)
         }
     }
 }

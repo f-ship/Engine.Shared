@@ -55,6 +55,7 @@ kotlin {
             implementation(compose.materialIconsExtended)
             implementation("ship.f.engine.shared.utils:serverdrivenui")
             implementation("ship.f.engine.shared:core")
+            implementation("ship.f.engine.client.utils:networking")
             implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
             implementation("io.ktor:ktor-serialization-kotlinx-json:3.0.0")
             implementation("io.ktor:ktor-client-content-negotiation:3.0.0")

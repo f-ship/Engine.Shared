@@ -17,8 +17,6 @@ class KtorClientDependency2 : Dependency() {
         }
         install(WebSockets) {
             pingInterval = 15.seconds
-
-//            maxFrameSize = Long.MAX_VALUE
         }
     }
 }
