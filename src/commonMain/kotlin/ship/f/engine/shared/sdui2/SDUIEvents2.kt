@@ -67,14 +67,6 @@ data class SDUIViewRequest2(
     val context: Map<String, String> = mapOf(),
 ) : Event()
 
-@Serializable
-@SerialName("SDUIReactiveInput2")
-data class SDUIReactiveInput2(
-    val id: MetaId2 = none,
-    val states: List<StateId2> = listOf(),
-    val metas: List<Meta2> = listOf(),
-) : Event()
-
 // TODO cannot use serializable until we create one for Resource
 // TODO Should probably leave the app to override this method using some kind of lambda
 data class SDUIConfig2(

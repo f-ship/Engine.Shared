@@ -23,7 +23,6 @@ class SDUISubPub2 : SubPub<SDUIState2>(
 
     override fun initState() = SDUIState2()
     override fun postInit() {
-        val client = getDependency(CommonClientDependency2::class).client
         val handler: (PopulatedSideEffectMeta2) -> Unit = { populatedSideEffect ->
             coroutineScope.launch { // TODO check to see if this is really necessary
                 publish(SDUISideEffect2(populatedSideEffect)) {
@@ -31,20 +30,12 @@ class SDUISubPub2 : SubPub<SDUIState2>(
                         ExpectationBuilder(
                             expectedEvent = SDUIInput2::class,
                             onCheck = { populatedSideEffect.onExpected.contains(sideEffectId) },
-                            on = {
-                                populatedSideEffect.onExpected[sideEffectId]?.forEach {
-                                    it.second.run(
-                                        state = client.get(it.first),
-                                        client = client,
-                                    )
-                                }
-                            }
+                            on = { } // TODO to replace with client3 handling
                         )
                     )
                 }
             }
         }
-        client.emitSideEffect = handler
         client3.emitSideEffect = handler
     }
 
