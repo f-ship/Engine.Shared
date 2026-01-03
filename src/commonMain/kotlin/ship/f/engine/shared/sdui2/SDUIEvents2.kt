@@ -47,6 +47,13 @@ data class SendSDUIInput2(
     val user: String,
 ) : Event()
 
+@Serializable
+@SerialName("SendSDUIInput2")
+data class AnonSendSDUIInput2(
+    val input: SDUIInput2,
+    val device: String,
+) : Event()
+
 // Events Emitted by SDUISubPub2
 @Serializable
 @SerialName("SDUISideEffect2")
