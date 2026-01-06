@@ -53,7 +53,7 @@ class SDUISubPub2 : SubPub<SDUIState2>(
             sduiLog("Received SDUIInput2 event ${it.id}", tag = "NavigationEngine > SDUIInput2")
             try {
                 client3.run {
-                    it.states.forEach { state -> initState(state) }
+                    it.states.forEach { state -> initState(state = state, forceUpdate = it.forceUpdate) }
                     it.metas.forEach { meta -> update(meta) }
                     it.metas.filterIsInstance<NavigationConfig2>()
                         .forEach { nav -> navigationEngine.navigate(nav.operation) }

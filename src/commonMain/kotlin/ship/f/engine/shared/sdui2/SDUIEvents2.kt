@@ -19,8 +19,8 @@ import ship.f.engine.shared.utils.serverdrivenui2.state.State2
 data class SDUIInput2(
     val id: MetaId2 = none,
     val sideEffectId: MetaId2 = none,
+    val forceUpdate: Boolean = false,
     val states: List<State2> = listOf(),
-    val orderedStates: List<StateId2> = listOf(),
     val metas: List<Meta2> = listOf(),
 ) : Event()
 
