@@ -25,6 +25,13 @@ data class SDUIInput2(
 ) : Event()
 
 @Serializable
+@SerialName("SDUIError2")
+data class SDUIError2(
+    val id: MetaId2 = none,
+    val error: String,
+) : Event()
+
+@Serializable
 @SerialName("MultiSDUIInput2")
 data class MultiSDUIInput2(
     val values: List<SDUIInput2>,

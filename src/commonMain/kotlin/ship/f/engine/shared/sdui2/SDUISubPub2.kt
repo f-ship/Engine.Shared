@@ -8,6 +8,7 @@ import ship.f.engine.shared.sdui2.SDUISubPub2.SDUIState2
 import ship.f.engine.shared.utils.serverdrivenui2.client3.Client3.Companion.client3
 import ship.f.engine.shared.utils.serverdrivenui2.config.meta.models.NavigationConfig2
 import ship.f.engine.shared.utils.serverdrivenui2.config.meta.models.PopulatedSideEffectMeta2
+import ship.f.engine.shared.utils.serverdrivenui2.ext.getRandomString
 import ship.f.engine.shared.utils.serverdrivenui2.ext.sduiLog
 
 class SDUISubPub2 : SubPub<SDUIState2>(
@@ -30,7 +31,29 @@ class SDUISubPub2 : SubPub<SDUIState2>(
                         ExpectationBuilder(
                             expectedEvent = SDUIInput2::class,
                             onCheck = { populatedSideEffect.onExpected.contains(sideEffectId) },
-                            on = { } // TODO to replace with client3 handling
+                            on = {
+                                try {
+                                    // TODO completely hacked, not a general solution
+                                    populatedSideEffect.onExpected[sideEffectId]?.forEach { exp ->
+                                        exp.second.run3(
+                                            state = client3.get(exp.first),
+                                            client = client3
+                                        )
+                                    }
+                                } catch (e: Exception) {
+                                    coroutineScope.launch {
+                                        publish(
+                                            ToastEvent(
+                                                message = "Sorry this expect cannot be performed at this time. Please try again later.",
+                                                durationMs = 2000L,
+                                                actionText = "Dismiss",
+                                                toastType = ToastEvent.ToastType.Warning,
+                                                key = getRandomString(),
+                                            )
+                                        )
+                                    }
+                                }
+                            }
                         )
                     )
                 }
@@ -75,6 +98,17 @@ class SDUISubPub2 : SubPub<SDUIState2>(
         le<ToastEvent> {
             sduiLog("Received ToastEvent event ${it.message}", tag = "EngineX")
             state.value = state.value.copy(toast = it)
+        }
+
+        le<SDUIError2> {
+            state.value = state.value.copy(
+                toast = ToastEvent(
+                    message = it.error,
+                    toastType = ToastEvent.ToastType.Error,
+                    durationMs = 2000L,
+                    key = it.id.scope,
+                )
+            )
         }
     }
 }
