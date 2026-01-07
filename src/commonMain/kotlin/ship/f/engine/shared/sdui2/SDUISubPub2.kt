@@ -1,6 +1,7 @@
 package ship.f.engine.shared.sdui2
 
 import androidx.compose.ui.graphics.vector.ImageVector
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.Resource
 import ship.f.engine.shared.core.*
@@ -35,10 +36,13 @@ class SDUISubPub2 : SubPub<SDUIState2>(
                                 try {
                                     // TODO completely hacked, not a general solution
                                     populatedSideEffect.onExpected[sideEffectId]?.forEach { exp ->
-                                        exp.second.run3(
-                                            state = client3.get(exp.first),
-                                            client = client3
-                                        )
+                                        coroutineScope.launch {
+                                            delay(2000L)
+                                            exp.second.run3(
+                                                state = client3.get(exp.first),
+                                                client = client3
+                                            )
+                                        }
                                     }
                                 } catch (e: Exception) {
                                     coroutineScope.launch {
