@@ -81,6 +81,12 @@ data class SDUIViewRequest2(
     val context: Map<String, String> = mapOf(),
 ) : Event()
 
+@Serializable
+@SerialName("SDUIClientRequest4")
+data class SDUIClientRequest4(
+    val stateId2: StateId2
+)
+
 // TODO cannot use serializable until we create one for Resource
 // TODO Should probably leave the app to override this method using some kind of lambda
 data class SDUIConfig2(
