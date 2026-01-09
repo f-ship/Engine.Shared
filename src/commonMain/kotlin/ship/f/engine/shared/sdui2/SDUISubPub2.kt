@@ -9,6 +9,7 @@ import ship.f.engine.shared.sdui2.SDUISubPub2.SDUIState2
 import ship.f.engine.shared.utils.serverdrivenui2.client3.Client3.Companion.client3
 import ship.f.engine.shared.utils.serverdrivenui2.config.meta.models.NavigationConfig2
 import ship.f.engine.shared.utils.serverdrivenui2.config.meta.models.PopulatedSideEffectMeta2
+import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Id2.StateId2
 import ship.f.engine.shared.utils.serverdrivenui2.ext.getRandomString
 import ship.f.engine.shared.utils.serverdrivenui2.ext.sduiLog
 
@@ -25,7 +26,12 @@ class SDUISubPub2 : SubPub<SDUIState2>(
 
     override fun initState() = SDUIState2()
     override fun postInit() {
-        val handler: (PopulatedSideEffectMeta2) -> Unit = { populatedSideEffect ->
+        val emitViewRequestHandler: (StateId2) -> Unit = {
+            coroutineScope.launch {
+                publish(SDUIClientRequest4(id = it))
+            }
+        }
+        val emitSideEffectHandler: (PopulatedSideEffectMeta2) -> Unit = { populatedSideEffect ->
             coroutineScope.launch { // TODO check to see if this is really necessary
                 publish(SDUISideEffect2(populatedSideEffect)) {
                     onceAny(
@@ -63,7 +69,8 @@ class SDUISubPub2 : SubPub<SDUIState2>(
                 }
             }
         }
-        client3.emitSideEffect = handler
+        client3.emitSideEffect = emitSideEffectHandler
+        client3.emitViewRequest = emitViewRequestHandler
     }
 
     override suspend fun ScopedEvent.onEvent() {

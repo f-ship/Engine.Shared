@@ -21,7 +21,31 @@ data class SDUIInput2(
     val sideEffectId: MetaId2 = none,
     val forceUpdate: Boolean = false,
     val states: List<State2> = listOf(),
+    val part: Part = Part(1,1),
     val metas: List<Meta2> = listOf(),
+) : Event() {
+    @Serializable
+    @SerialName("Part")
+    data class Part(val current: Int, val total: Int)
+}
+
+@Serializable
+@SerialName("Processing")
+data class Processing(
+    val id: MetaId2 = none,
+) : Event()
+
+@Serializable
+@SerialName("Complete")
+data class Complete(
+    val id: MetaId2 = none,
+) : Event()
+
+@Serializable
+@SerialName("SDUIOutput2")
+data class RerequestMissingParts(
+    val id: MetaId2 = none,
+    val parts: Set<Int>,
 ) : Event()
 
 @Serializable
@@ -36,6 +60,7 @@ data class SDUIError2(
 data class MultiSDUIInput2(
     val values: List<SDUIInput2>,
     val viewRequest: SDUIViewRequest2,
+    val parts: Set<Int>,
 ) : Event()
 
 @Serializable
@@ -84,8 +109,8 @@ data class SDUIViewRequest2(
 @Serializable
 @SerialName("SDUIClientRequest4")
 data class SDUIClientRequest4(
-    val stateId2: StateId2
-)
+    val id: StateId2,
+) : Event()
 
 // TODO cannot use serializable until we create one for Resource
 // TODO Should probably leave the app to override this method using some kind of lambda
