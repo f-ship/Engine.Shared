@@ -26,7 +26,11 @@ data class SDUIInput2(
 ) : Event() {
     @Serializable
     @SerialName("Part")
-    data class Part(val current: Int, val total: Int)
+    data class Part(val current: Int, val total: Int) {
+        companion object {
+            const val ALL = -1
+        }
+    }
 }
 
 @Serializable
