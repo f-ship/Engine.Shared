@@ -63,7 +63,7 @@ data class SDUIError2(
 @SerialName("MultiSDUIInput2")
 data class MultiSDUIInput2(
     val values: List<SDUIInput2>,
-    val viewRequest: SDUIViewRequest2,
+    val viewRequest: SDUIViewRequest5,
     val parts: Set<Int>,
 ) : Event()
 
@@ -98,8 +98,30 @@ data class SDUISideEffect2(
 ) : Event()
 
 @Serializable
+@SerialName("SDUIData")
+data class SDUIData(
+    val id: MetaId2,
+    val data: ByteArray,
+) : Event() {
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other == null || this::class != other::class) return false
+
+        other as SDUIData
+
+        if (!data.contentEquals(other.data)) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        return data.contentHashCode()
+    }
+}
+
+@Serializable
 @SerialName("SDUIViewRequest2")
-data class SDUIViewRequest2(
+data class SDUIViewRequest5(
     val parentZoneStateId2: StateId2? = null,
     val zoneStateId2: StateId2,
     val zones: List<String> = listOf(defaultScope2), // TODO to rewrite engine to use a simpler version of scoping
