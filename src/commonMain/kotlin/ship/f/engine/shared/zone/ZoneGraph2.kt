@@ -32,6 +32,7 @@ abstract class Zone<D : DomainEvent6, O : Any?> (val update: KClass<out D>) {
     abstract fun handleRequest(input: ViewRequest6): RequestHash
 
     lateinit var send: (List<SDUIInput2>, String) -> Boolean
+    lateinit var send2: (List<SduiDomain<*>>, List<String>, ViewRequest6) -> Unit
     lateinit var publish: (ViewRequest6) -> Unit
 
     /**
@@ -51,7 +52,7 @@ abstract class Zone<D : DomainEvent6, O : Any?> (val update: KClass<out D>) {
         when(cachedResult) {
             is RequestResult.Pending -> Unit
             is Success<*> -> {
-                send(cachedResult.output.map{ it.sdui }, hash.requesterId)
+                send2(cachedResult.output, hash.domainIds, input)
             }
             is RequestResult.Failed, null -> {
                 val nonCachedDomains = hash.domainIds.filterNot { domains.containsKey(it) }
@@ -62,14 +63,14 @@ abstract class Zone<D : DomainEvent6, O : Any?> (val update: KClass<out D>) {
                         nonCachedDomains.forEach { domainId ->
                             val domain: DomainEvent6 = StaticVoid6(input)
                             val sdui = create(domain as D)
-                            domains[domainId] = SduiDomain(domain, sdui)
+                            domains[domainId] = SduiDomain(domain, sdui, domainId)
                         }
                     }
                     requests[hash.requestId] = Success(output = hash.domainIds.mapNotNull { domains[it] })
                 }
 
                 val cachedDomains = hash.domainIds.mapNotNull { domains[it] }
-                send(cachedDomains.map { update(input, it.sdui) }, hash.requesterId)
+                send2(cachedDomains.map { it.copy(sdui = update(input, it.sdui)) }, hash.domainIds, input)
             }
         }
     }
@@ -78,7 +79,7 @@ abstract class Zone<D : DomainEvent6, O : Any?> (val update: KClass<out D>) {
         val hash = handleRequest(input)
         val sdui = create(domain)
         val update = update(input, sdui)
-        send(listOf(update), hash.requesterId)
+        send2(listOf(SduiDomain(domain, update, hash.domainIds.firstOrNull().orEmpty()), ), hash.domainIds, input)
 
         if (hash.domainIds.filterNot { domains.containsKey(it) }.isEmpty()) {
             requests[hash.requestId] = Success(output = hash.domainIds.mapNotNull { domains[it] })
@@ -93,7 +94,8 @@ abstract class Zone<D : DomainEvent6, O : Any?> (val update: KClass<out D>) {
 
     data class SduiDomain<D : ScopedEvent>(
         val domain: D,
-        val sdui: SDUIInput2
+        val sdui: SDUIInput2,
+        val domainHash: String,
     )
 
     sealed class RequestResult {
