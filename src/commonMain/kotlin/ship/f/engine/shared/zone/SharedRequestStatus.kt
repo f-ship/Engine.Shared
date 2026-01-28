@@ -1,5 +1,6 @@
 package ship.f.engine.shared.zone
 
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import ship.f.engine.shared.core.ScopedEvent
 import ship.f.engine.shared.core.defaultScope2
@@ -38,6 +39,9 @@ sealed class RequestStatus : ScopedEvent() {
         val parts: Set<Int>,
         val total: Int,
     ) : RequestStatus() {
+
+        @Serializable
+        @SerialName("Part")
         data class Part(
             val id: Id2,
             val index: Int,
