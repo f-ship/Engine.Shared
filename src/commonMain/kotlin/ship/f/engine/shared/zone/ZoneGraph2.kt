@@ -171,18 +171,6 @@ abstract class Zone<D : DomainEvent6>(val update: KClass<D>) {
         }
     }
 
-//    fun sendJointRequest(requestId: String, input: ViewRequest6){
-//        jointRequest[requestId]?.forEach {
-//            val domainHashIds = requestIdToDomainHash[requestId]!![it.key].orEmpty()
-//
-//            when(val result = it.value){
-//                is RequestResult.Failed -> Unit
-//                is RequestResult.Pending -> Unit
-//                is Success<*> -> send2(result.output, domainHashIds, input)
-//            }
-//        }
-//    }
-
     /**
      * Augment Request will finally send the sduis when the entire list is complete
      */
