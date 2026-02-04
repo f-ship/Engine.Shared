@@ -6,6 +6,7 @@ import kotlinx.serialization.Serializable
 import org.jetbrains.compose.resources.Resource
 import ship.f.engine.shared.core.Event
 import ship.f.engine.shared.core.defaultScope2
+import ship.f.engine.shared.utils.serverdrivenui2.config.action.models.Action2
 import ship.f.engine.shared.utils.serverdrivenui2.config.meta.models.Meta2
 import ship.f.engine.shared.utils.serverdrivenui2.config.meta.models.PopulatedSideEffectMeta2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Id2.MetaId2
@@ -23,6 +24,7 @@ data class SDUIInput2(
     val states: List<State2> = listOf(),
     val part: Part = Part(1,1),
     val metas: List<Meta2> = listOf(),
+    val actions: List<Action2> = listOf(),
 ) : Event() {
     @Serializable
     @SerialName("Part")
@@ -32,12 +34,6 @@ data class SDUIInput2(
         }
     }
 }
-
-@Serializable
-@SerialName("Processing")
-data class Processing(
-    val id: MetaId2 = none,
-) : Event()
 
 @Serializable
 @SerialName("Complete")

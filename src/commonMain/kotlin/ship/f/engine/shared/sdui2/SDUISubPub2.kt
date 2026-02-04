@@ -12,6 +12,7 @@ import ship.f.engine.shared.utils.serverdrivenui2.config.meta.models.PopulatedSi
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Id2.StateId2
 import ship.f.engine.shared.utils.serverdrivenui2.ext.getRandomString
 import ship.f.engine.shared.utils.serverdrivenui2.ext.sduiLog
+import ship.f.engine.shared.utils.serverdrivenui2.state.UnknownState2
 
 class SDUISubPub2 : SubPub<SDUIState2>(
     requiredEvents = setOf(SDUIConfig2::class),
@@ -69,8 +70,12 @@ class SDUISubPub2 : SubPub<SDUIState2>(
                 }
             }
         }
-        client3.emitSideEffect = emitSideEffectHandler
+        val localSideEffectHandler: (PopulatedSideEffectMeta2) -> Unit = {
+
+        }
         client3.emitViewRequest = emitViewRequestHandler
+        client3.emitSideEffect = emitSideEffectHandler
+        client3.emitLocalEffect = localSideEffectHandler
     }
 
     override suspend fun ScopedEvent.onEvent() {
@@ -84,14 +89,16 @@ class SDUISubPub2 : SubPub<SDUIState2>(
         } ?: state.value
 
         le<SDUIInput2> {
-            sduiLog("Received SDUIInput2 event ${it.id}", tag = "NavigationEngine > SDUIInput2")
+            sduiLog("Received SDUIInput2 event ${it.id}", tag = "SDUISubPub > SDUIInput2")
             try {
                 client3.run {
-                    sduiLog(it.states.map { it.id }, tag = "NavigationEngine > SDUIInput2 > states")
                     it.states.forEach { state -> initState(state = state, forceUpdate = it.forceUpdate) }
                     it.metas.forEach { meta -> update(meta) }
-                    it.metas.filterIsInstance<NavigationConfig2>()
-                        .forEach { nav -> navigationEngine.navigate(nav.operation) }
+                    it.metas.filterIsInstance<NavigationConfig2>().forEach { nav -> navigationEngine.navigate(nav.operation) }
+                    it.actions.forEach { action ->
+                        sduiLog("Running action ${action}", tag = "SDUISubPub > SDUIInput2 > actions")
+                        action.run3(state = UnknownState2(), client = client3)
+                    }
                 }
                 client3.commit()
             } catch (e: Exception) {

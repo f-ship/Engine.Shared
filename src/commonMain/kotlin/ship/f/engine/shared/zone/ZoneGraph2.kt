@@ -183,8 +183,8 @@ abstract class Zone<D : DomainEvent6>(val update: KClass<D>) {
             "Augmenting request ${input.id.name} with ${domain.domainId} and hash ${input.domainId}",
             tag = "ZoneGraph2 > augmentRequest"
         )
-        if (currentInput.domainIds.filterNot { sduiDomains.containsKey(it) || failedDomainRequests.contains(it) }
-                .isEmpty()) { // TODO here is where things break down
+        if (currentInput.domainIds.filterNot { sduiDomains.containsKey(it) || failedDomainRequests.contains(it) }.isEmpty()) {
+            // TODO here is where things break down
             sduiLog(
                 "Augmenting & sending request ${input.id.name} | ${currentInput.requestId} | $name",
                 tag = "ZoneGraph2 > augmentRequest"
