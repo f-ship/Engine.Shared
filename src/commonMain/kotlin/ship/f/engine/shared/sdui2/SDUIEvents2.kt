@@ -94,6 +94,12 @@ data class SDUISideEffect2(
 ) : Event()
 
 @Serializable
+@SerialName("SDUILocalEffect2")
+data class SDUILocalEffect2(
+    val sideEffect: PopulatedSideEffectMeta2,
+) : Event()
+
+@Serializable
 @SerialName("SDUIData")
 data class SDUIData(
     val id: MetaId2,

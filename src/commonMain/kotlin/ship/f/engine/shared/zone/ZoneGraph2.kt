@@ -34,11 +34,6 @@ abstract class Zone<D : DomainEvent6>(val update: KClass<D>) {
     protected abstract fun getPromise(input: InitiatedViewRequest6): List<Pair<RefState2, DomainEvent6?>>
 
     /**
-     * handleRequest should return a deterministic hash to represent the request
-     */
-    abstract fun handleRequest(input: ViewRequest6): RequestHash
-
-    /**
      * moving away from a hash based system to an input based system to enable easier flow of data
      */
     abstract fun initiateInput(input: ViewRequest6): InitiatedViewRequest6
@@ -215,9 +210,6 @@ abstract class Zone<D : DomainEvent6>(val update: KClass<D>) {
     val requests = mutableMapOf<String, RequestResult>() // <---- When this is updated
     val subscribedRequests =
         mutableMapOf<String, List<String>>() // <---- This is checked to see if anyone is waiting on that request if computed from scratch
-
-    data class RequestHash(val requestId: String, val sduiDomainIds: List<String>, val requesterId: String)
-
     data class SduiDomain<D : ScopedEvent>(
         val domain: D,
         val sdui: SDUIInput2,
@@ -253,13 +245,6 @@ abstract class Zone<D : DomainEvent6>(val update: KClass<D>) {
                     )
                 )
             },
-            crossinline handleRequest: (input: ViewRequest6) -> RequestHash = {
-                RequestHash(
-                    requestId = name,
-                    sduiDomainIds = listOf(name),
-                    requesterId = it.requesterId
-                )
-            },
             crossinline initiateInput: (input: ViewRequest6) -> InitiatedViewRequest6 = { input ->
                 val id = input.id.name + input.id.scope
                 InitiatedViewRequest6(
@@ -280,7 +265,6 @@ abstract class Zone<D : DomainEvent6>(val update: KClass<D>) {
                 update(input, sduiInput2, domain, requestId)
 
             override fun getPromise(input: InitiatedViewRequest6) = getPromise(input)
-            override fun handleRequest(input: ViewRequest6) = handleRequest(input)
             override fun requestDomain(input: InitiatedViewRequest6, sduiDomainId: String): DomainEvent6 =
                 requestDomain(input, sduiDomainId)
 
@@ -288,9 +272,5 @@ abstract class Zone<D : DomainEvent6>(val update: KClass<D>) {
         }
 
         lateinit var internalZoneMap: Map<String, Zone<out DomainEvent6>> // TODO make this be the source of truth and not direct state
-
-//        val jointRequest = mutableMapOf<String, MutableMap<String, RequestResult>>()
-//        val domainHashToRequestId = mutableMapOf<String, String>()
-//        val requestIdToDomainHash = mutableMapOf<String, MutableMap<String, List<String>>>()
     }
 }

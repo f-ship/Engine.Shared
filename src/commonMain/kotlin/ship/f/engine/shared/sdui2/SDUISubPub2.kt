@@ -71,7 +71,9 @@ class SDUISubPub2 : SubPub<SDUIState2>(
             }
         }
         val localSideEffectHandler: (PopulatedSideEffectMeta2) -> Unit = {
-
+            coroutineScope.launch {
+                publish(event = SDUILocalEffect2(it))
+            }
         }
         client3.emitViewRequest = emitViewRequestHandler
         client3.emitSideEffect = emitSideEffectHandler
