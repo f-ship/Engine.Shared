@@ -9,6 +9,7 @@ import ship.f.engine.shared.sdui2.SDUISubPub2.SDUIState2
 import ship.f.engine.shared.utils.serverdrivenui2.client3.Client3.Companion.client3
 import ship.f.engine.shared.utils.serverdrivenui2.config.meta.models.NavigationConfig2
 import ship.f.engine.shared.utils.serverdrivenui2.config.meta.models.PopulatedSideEffectMeta2
+import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Id2
 import ship.f.engine.shared.utils.serverdrivenui2.config.state.models.Id2.StateId2
 import ship.f.engine.shared.utils.serverdrivenui2.ext.getRandomString
 import ship.f.engine.shared.utils.serverdrivenui2.ext.sduiLog
@@ -29,7 +30,12 @@ class SDUISubPub2 : SubPub<SDUIState2>(
     override fun postInit() {
         val emitViewRequestHandler: (StateId2) -> Unit = {
             coroutineScope.launch {
-                publish(SDUIClientRequest4(id = it))
+                publish(
+                    event = ScopedEvent.UninitiatedViewRequest6(
+                        id = Id2.MetaId2(it.name, it.scope),
+                        requesterId = ""
+                    )
+                )
             }
         }
         val emitSideEffectHandler: (PopulatedSideEffectMeta2) -> Unit = { populatedSideEffect ->
