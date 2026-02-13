@@ -18,6 +18,7 @@ abstract class Zone<D : DomainEvent6>(val update: KClass<D>) {
     lateinit var send2: (sduis: List<ComputedSduiDomain<*>>, List<String>, ViewRequest6) -> Unit
     lateinit var publish: (DomainEvent6) -> Unit
     var children = listOf<String>()
+    var nestedChildren = listOf<String>()
 
     var counter = 0
 
@@ -111,39 +112,59 @@ abstract class Zone<D : DomainEvent6>(val update: KClass<D>) {
                     requests[currentInput.requestId] = RequestResult.Pending(currentInput.domainIds)
                 }
                 val domainIds = (requests[currentInput.requestId] as? RequestResult.Pending)?.domainIds ?: currentInput.domainIds
-                when {
-                    update == StaticVoid6::class -> {
-                        val computingInput = currentInput.toComputingViewRequest6()
-                        val domain = StaticVoid6(computingInput) as D
-                        val sduiDomain = getComputedSubdomain(computingInput.domainId) ?: ComputedSduiDomain(
-                            domain = domain,
-                            sdui = create(domain, computingInput.requestId),
-                            domainId = computingInput.domainId
-                        ).also {
-                            sduiDomains[computingInput.domainId] = it
-                        }
-                        val updatedSduiDomain = sduiDomain.copy(
-                            sdui = update(computingInput, sduiDomain.sdui, domain)
-                        )
-                        val result = Success(output = listOf(updatedSduiDomain), input = computingInput)
-                        requests[currentInput.requestId] = result
-                        send2(result.output, listOf(computingInput.domainId), computingInput)
 
-                        val allRequests =
-                            internalZoneMap.mapNotNull { it.value.requests[computingInput.requestId]?.let { v -> it.key + "|" + computingInput.requestId } }
-                        sduiLog(allRequests, tag = "X > ZoneGraph2 > Static > request")
-
-                        internalZoneMap.forEach {
-                            it.value.requests[computingInput.requestId]?.let { requestResult ->
-                                (requestResult as? Success<*>)?.let { success ->
-                                    sduiLog("Sending to ${it.key} for $name", tag = "ZoneGraph2 > Static > internalZoneMap")
-                                    if (it.key != name && children.contains(it.key)) { // TODO this is not working as expected
-                                        send2(success.output, (success.input as? DomainViewRequest6)?.domainIds.orEmpty(), success.input)
-                                    }
-                                }
+                if (update == StaticVoid6::class) {
+                    sduiLog("StaticVoid6 $name for $currentInput", tag = "ZoneGraph2 > request")
+                    domainIds.forEach { domainId ->
+                        sduiDomains[domainId] = sduiDomains[domainId] ?: domainId.let {
+                            val computingInput = currentInput.toComputingViewRequest6(domainId)
+                            val domain = StaticVoid6(computingInput) as D
+                            ComputedSduiDomain(
+                                domain = domain,
+                                sdui = create(domain, computingInput.requestId),
+                                domainId = computingInput.domainId
+                            ).also {
+                                sduiDomains[domainId] = it
                             }
                         }
                     }
+                }
+
+                when {
+                    // TODO this makes the assumption there will always be one, this is an incorrect assumption
+                    // TODO this is the next bug in the chain to smash
+//                    update == StaticVoid6::class -> {
+//                        val computingInput = currentInput.toComputingViewRequest6()
+//                        val domain = StaticVoid6(computingInput) as D
+//                        val sduiDomain = getComputedSubdomain(computingInput.domainId) ?: ComputedSduiDomain(
+//                            domain = domain,
+//                            sdui = create(domain, computingInput.requestId),
+//                            domainId = computingInput.domainId
+//                        ).also {
+//                            sduiDomains[computingInput.domainId] = it
+//                        }
+//                        val updatedSduiDomain = sduiDomain.copy(
+//                            sdui = update(computingInput, sduiDomain.sdui, domain)
+//                        )
+//                        val result = Success(output = listOf(updatedSduiDomain), input = computingInput)
+//                        requests[currentInput.requestId] = result
+//                        send2(result.output, listOf(computingInput.domainId), computingInput)
+//
+//                        val allRequests =
+//                            internalZoneMap.mapNotNull { it.value.requests[computingInput.requestId]?.let { v -> it.key + "|" + computingInput.requestId } }
+//                        sduiLog(allRequests, tag = "X > ZoneGraph2 > Static > request")
+//
+//                        internalZoneMap.forEach {
+//                            it.value.requests[computingInput.requestId]?.let { requestResult ->
+//                                (requestResult as? Success<*>)?.let { success ->
+//                                    sduiLog("Sending to ${it.key} for $name", tag = "ZoneGraph2 > Static > internalZoneMap")
+//                                    if (it.key != name && children.contains(it.key)) { // TODO this is not working as expected
+//                                        send2(success.output, (success.input as? DomainViewRequest6)?.domainIds.orEmpty(), success.input)
+//                                    }
+//                                }
+//                            }
+//                        }
+//                    }
 
                     domainIds.filterNot { sduiDomains[it] != null && sduiDomains[it] !is PendingSduiDomain }.isEmpty() -> {
                         val sduiDomains = domainIds.mapNotNull { getComputedSubdomain(it) }
@@ -161,13 +182,10 @@ abstract class Zone<D : DomainEvent6>(val update: KClass<D>) {
                             is DomainViewRequest6 -> currentInput.copy(domainIds = successDomainIds)
                             is TrivialViewRequest6 -> currentInput.copy(domainIds = successDomainIds)
                         }
-                        val result = Success(output = updatedDomains, input = successInput) // TODO this may not be working as expected
+                        val previousInflight = (requests[successInput.requestId] as? Success<D>)?.inflight.orEmpty().toSet()
+                        val result = Success(output = updatedDomains, input = successInput, inflight = domainIds)
                         requests[successInput.requestId] = result
-                        send2(result.output, successDomainIds, successInput)
-//
-//                        val allRequests =
-//                            internalZoneMap.mapNotNull { it.value.requests[currentInput.requestId]?.let { v -> it.key + "|" + currentInput.requestId } }
-//                        sduiLog(allRequests, tag = "X > ZoneGraph2 > request")
+                        send2(result.output, successDomainIds - previousInflight, successInput)
 
                         internalZoneMap.forEach {
                             it.value.requests[successInput.requestId]?.let { requestResult ->
@@ -239,7 +257,7 @@ abstract class Zone<D : DomainEvent6>(val update: KClass<D>) {
         data class Success<D : ScopedEvent>(
             val output: List<ComputedSduiDomain<D>>,
             val input: ViewRequest6,
-            val refs: Map<String, List<String>> = mapOf() // TODO we somewhat need to compute views that were promised as they are not included in the request
+            val inflight: List<String> = listOf(), // TODO it's a bit jank, but
         ) : RequestResult()
 
         data class Pending(
