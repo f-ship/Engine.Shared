@@ -18,7 +18,6 @@ abstract class Zone<D : DomainEvent6>(val update: KClass<D>) {
     lateinit var send2: (sduis: List<ComputedSduiDomain<*>>, List<String>, ViewRequest6) -> Unit
     lateinit var publish: (DomainEvent6) -> Unit
     var children = listOf<String>()
-    var nestedChildren = listOf<String>()
 
     var counter = 0
 
@@ -33,11 +32,6 @@ abstract class Zone<D : DomainEvent6>(val update: KClass<D>) {
     abstract fun update(input: DomainViewRequest6, sduiInput2: SDUIInput2, domain: D): SDUIInput2
 
     /**
-     * Called by the zone to another zone, it's the callee zones responsibility to add the requests to be shipped out
-     */
-    protected abstract fun getPromise(input: DomainViewRequest6): List<Pair<RefState2, DomainEvent6?>>
-
-    /**
      * moving away from a hash based system to an input based system to enable easier flow of data
      */
     abstract fun initiateInput(input: UninitiatedViewRequest6): TrivialViewRequest6
@@ -46,14 +40,6 @@ abstract class Zone<D : DomainEvent6>(val update: KClass<D>) {
      * requestDomain
      */
     abstract fun requestDomain(input: InitiatedViewRequest6, sduiDomainId: String): DomainEvent6
-
-    // TODO I need to create the concept of synthetic requests that get built after real request to enable resending promises
-    fun fulfillPromise(input: DomainViewRequest6) = getPromise(input) // TODO convert to a derivative View Request
-        .map { (refState, domainEvent) ->
-            sduiLog("Fulfilling promise for $refState with $counter", tag = "ZoneGraph2 > fulfillPromise")
-            domainEvent?.let { publish(it) }
-            refState
-        }
 
     /**
      * Called by the user as a request, if the request is a cache miss then it will be sent so the domain can update
@@ -68,6 +54,9 @@ abstract class Zone<D : DomainEvent6>(val update: KClass<D>) {
             is DomainViewRequest6 -> input.copy(domainIds = initiateInput(input.toUnitiatedViewRequest6()).domainIds)
         }
         val refs = currentInput.domainIds.map { RefState2(id = Id2.StateId2(name = name, scope = it, isGlobal = true)) }
+
+//        sduiLog(refs, tag = "ZoneGraph2 > request") { name == "AgendaItem" }
+//        sduiLog(input, currentInput, tag = "ZoneGraph2 > Compare > SpeakerItems") { name == "SpeakerItem" }
 
         // TODO This adds the current requester to the list of subscribers, it's not currently used
         val requesterIds = subscribedRequests[currentInput.requestId] ?: listOf()
@@ -86,8 +75,8 @@ abstract class Zone<D : DomainEvent6>(val update: KClass<D>) {
                 internalZoneMap.forEach {
                     it.value.requests[currentInput.requestId]?.let { requestResult ->
                         (requestResult as? Success<*>)?.let { success ->
-                            sduiLog("Sending to ${it.key} for $name", tag = "ZoneGraph2 > Success > internalZoneMap")
                             if (it.key != name && children.contains(it.key)) { // TODO this is not working as expected
+                                sduiLog("Sending to ${it.key} for $name", tag = "ZoneGraph2 > Success > internalZoneMap")
                                 send2(success.output, (success.input as? DomainViewRequest6)?.domainIds.orEmpty(), success.input)
                             }
                         }
@@ -111,7 +100,7 @@ abstract class Zone<D : DomainEvent6>(val update: KClass<D>) {
                     sduiLog("RequestResult.Failed or null $name for $currentInput", tag = "ZoneGraph2 > request")
                     requests[currentInput.requestId] = RequestResult.Pending(currentInput.domainIds)
                 }
-                val domainIds = (requests[currentInput.requestId] as? RequestResult.Pending)?.domainIds ?: currentInput.domainIds
+                val domainIds = (requests[currentInput.requestId] as? RequestResult.Pending)?.domainIds ?: currentInput.domainIds // TODO this is probably erroneous also
 
                 if (update == StaticVoid6::class) {
                     sduiLog("StaticVoid6 $name for $currentInput", tag = "ZoneGraph2 > request")
@@ -131,41 +120,6 @@ abstract class Zone<D : DomainEvent6>(val update: KClass<D>) {
                 }
 
                 when {
-                    // TODO this makes the assumption there will always be one, this is an incorrect assumption
-                    // TODO this is the next bug in the chain to smash
-//                    update == StaticVoid6::class -> {
-//                        val computingInput = currentInput.toComputingViewRequest6()
-//                        val domain = StaticVoid6(computingInput) as D
-//                        val sduiDomain = getComputedSubdomain(computingInput.domainId) ?: ComputedSduiDomain(
-//                            domain = domain,
-//                            sdui = create(domain, computingInput.requestId),
-//                            domainId = computingInput.domainId
-//                        ).also {
-//                            sduiDomains[computingInput.domainId] = it
-//                        }
-//                        val updatedSduiDomain = sduiDomain.copy(
-//                            sdui = update(computingInput, sduiDomain.sdui, domain)
-//                        )
-//                        val result = Success(output = listOf(updatedSduiDomain), input = computingInput)
-//                        requests[currentInput.requestId] = result
-//                        send2(result.output, listOf(computingInput.domainId), computingInput)
-//
-//                        val allRequests =
-//                            internalZoneMap.mapNotNull { it.value.requests[computingInput.requestId]?.let { v -> it.key + "|" + computingInput.requestId } }
-//                        sduiLog(allRequests, tag = "X > ZoneGraph2 > Static > request")
-//
-//                        internalZoneMap.forEach {
-//                            it.value.requests[computingInput.requestId]?.let { requestResult ->
-//                                (requestResult as? Success<*>)?.let { success ->
-//                                    sduiLog("Sending to ${it.key} for $name", tag = "ZoneGraph2 > Static > internalZoneMap")
-//                                    if (it.key != name && children.contains(it.key)) { // TODO this is not working as expected
-//                                        send2(success.output, (success.input as? DomainViewRequest6)?.domainIds.orEmpty(), success.input)
-//                                    }
-//                                }
-//                            }
-//                        }
-//                    }
-
                     domainIds.filterNot { sduiDomains[it] != null && sduiDomains[it] !is PendingSduiDomain }.isEmpty() -> {
                         val sduiDomains = domainIds.mapNotNull { getComputedSubdomain(it) }
                         val updatedDomains = sduiDomains.map {
@@ -190,8 +144,8 @@ abstract class Zone<D : DomainEvent6>(val update: KClass<D>) {
                         internalZoneMap.forEach {
                             it.value.requests[successInput.requestId]?.let { requestResult ->
                                 (requestResult as? Success<*>)?.let { success ->
-                                    sduiLog("Sending to ${it.key} for $name", tag = "ZoneGraph2 > Domain > internalZoneMap")
                                     if (it.key != name && children.contains(it.key)) { // TODO this is not working as expected
+                                        sduiLog("Sending to ${it.key} for $name", tag = "ZoneGraph2 > Domain > internalZoneMap")
                                         send2(success.output, (success.input as? DomainViewRequest6)?.domainIds.orEmpty(), successInput)
                                     }
                                 }
@@ -276,14 +230,6 @@ abstract class Zone<D : DomainEvent6>(val update: KClass<D>) {
             name: String,
             crossinline create: (update: D, requestId: String) -> SDUIInput2,
             crossinline update: ((input: DomainViewRequest6, sduiInput2: SDUIInput2, domain: D) -> SDUIInput2) = { _, sduiInput2, _ -> sduiInput2 },
-            crossinline getPromise: (input: DomainViewRequest6) -> List<Pair<RefState2, DomainEvent6?>> = {
-                listOf(
-                    Pair(
-                        RefState2(id = Id2.StateId2(name)),
-                        null
-                    )
-                )
-            },
             crossinline initiateInput: (input: UninitiatedViewRequest6) -> TrivialViewRequest6 = { input ->
                 val id = input.id.name + input.id.scope
                 TrivialViewRequest6(
@@ -302,7 +248,6 @@ abstract class Zone<D : DomainEvent6>(val update: KClass<D>) {
             override fun update(input: DomainViewRequest6, sduiInput2: SDUIInput2, domain: D) =
                 update(input, sduiInput2, domain)
 
-            override fun getPromise(input: DomainViewRequest6) = getPromise(input)
             override fun requestDomain(input: InitiatedViewRequest6, sduiDomainId: String): DomainEvent6 =
                 requestDomain(input, sduiDomainId)
 
