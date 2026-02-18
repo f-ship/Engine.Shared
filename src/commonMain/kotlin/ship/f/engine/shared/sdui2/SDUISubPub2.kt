@@ -32,7 +32,7 @@ class SDUISubPub2 : SubPub<SDUIState2>(
             coroutineScope.launch {
                 publish(
                     event = ScopedEvent.UninitiatedViewRequest6(
-                        id = Id2.MetaId2(it.name, it.scope),
+                        id = Id2.ZoneId2(name = it.name, scopes = listOf(it.scope)),
                         requesterId = ""
                     )
                 )
