@@ -5,7 +5,9 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.Resource
 import ship.f.engine.shared.core.*
+import ship.f.engine.shared.core.ScopedEvent.Nuke
 import ship.f.engine.shared.sdui2.SDUISubPub2.SDUIState2
+import ship.f.engine.shared.utils.serverdrivenui2.client3.Client3
 import ship.f.engine.shared.utils.serverdrivenui2.client3.Client3.Companion.client3
 import ship.f.engine.shared.utils.serverdrivenui2.config.meta.models.NavigationConfig2
 import ship.f.engine.shared.utils.serverdrivenui2.config.meta.models.PopulatedSideEffectMeta2
@@ -19,6 +21,60 @@ class SDUISubPub2 : SubPub<SDUIState2>(
     requiredEvents = setOf(SDUIConfig2::class),
     nonRequiredEvents = setOf(SDUIInput2::class, ToastEvent::class),
 ) {
+
+    val emitViewRequestHandler: (StateId2) -> Unit = {
+        coroutineScope.launch {
+            publish(
+                event = ScopedEvent.UninitiatedViewRequest6(
+                    id = Id2.ZoneId2(name = it.name, scopes = listOf(it.scope)),
+                    requesterId = ""
+                )
+            )
+        }
+    }
+    val emitSideEffectHandler: (PopulatedSideEffectMeta2) -> Unit = { populatedSideEffect ->
+        coroutineScope.launch { // TODO check to see if this is really necessary
+            publish(SDUISideEffect2(populatedSideEffect)) {
+                onceAny(
+                    ExpectationBuilder(
+                        expectedEvent = SDUIInput2::class,
+                        onCheck = { populatedSideEffect.onExpected.contains(sideEffectId) },
+                        on = {
+                            try {
+                                // TODO completely hacked, not a general solution
+                                populatedSideEffect.onExpected[sideEffectId]?.forEach { exp ->
+                                    coroutineScope.launch {
+                                        delay(2000L)
+                                        exp.second.run3(
+                                            state = client3.get(exp.first),
+                                            client = client3
+                                        )
+                                    }
+                                }
+                            } catch (e: Exception) {
+                                coroutineScope.launch {
+                                    publish(
+                                        ToastEvent(
+                                            message = "Sorry this expect cannot be performed at this time. Please try again later.",
+                                            durationMs = 2000L,
+                                            actionText = "Dismiss",
+                                            toastType = ToastEvent.ToastType.Warning,
+                                            key = getRandomString(),
+                                        )
+                                    )
+                                }
+                            }
+                        }
+                    )
+                )
+            }
+        }
+    }
+    val localSideEffectHandler: (PopulatedSideEffectMeta2) -> Unit = {
+        coroutineScope.launch {
+            publish(event = SDUILocalEffect2(it))
+        }
+    }
     data class SDUIState2(
         val projectName: String? = null,
         val resources: Map<String, Resource> = mapOf(),
@@ -28,59 +84,6 @@ class SDUISubPub2 : SubPub<SDUIState2>(
 
     override fun initState() = SDUIState2()
     override fun postInit() {
-        val emitViewRequestHandler: (StateId2) -> Unit = {
-            coroutineScope.launch {
-                publish(
-                    event = ScopedEvent.UninitiatedViewRequest6(
-                        id = Id2.ZoneId2(name = it.name, scopes = listOf(it.scope)),
-                        requesterId = ""
-                    )
-                )
-            }
-        }
-        val emitSideEffectHandler: (PopulatedSideEffectMeta2) -> Unit = { populatedSideEffect ->
-            coroutineScope.launch { // TODO check to see if this is really necessary
-                publish(SDUISideEffect2(populatedSideEffect)) {
-                    onceAny(
-                        ExpectationBuilder(
-                            expectedEvent = SDUIInput2::class,
-                            onCheck = { populatedSideEffect.onExpected.contains(sideEffectId) },
-                            on = {
-                                try {
-                                    // TODO completely hacked, not a general solution
-                                    populatedSideEffect.onExpected[sideEffectId]?.forEach { exp ->
-                                        coroutineScope.launch {
-                                            delay(2000L)
-                                            exp.second.run3(
-                                                state = client3.get(exp.first),
-                                                client = client3
-                                            )
-                                        }
-                                    }
-                                } catch (e: Exception) {
-                                    coroutineScope.launch {
-                                        publish(
-                                            ToastEvent(
-                                                message = "Sorry this expect cannot be performed at this time. Please try again later.",
-                                                durationMs = 2000L,
-                                                actionText = "Dismiss",
-                                                toastType = ToastEvent.ToastType.Warning,
-                                                key = getRandomString(),
-                                            )
-                                        )
-                                    }
-                                }
-                            }
-                        )
-                    )
-                }
-            }
-        }
-        val localSideEffectHandler: (PopulatedSideEffectMeta2) -> Unit = {
-            coroutineScope.launch {
-                publish(event = SDUILocalEffect2(it))
-            }
-        }
         client3.emitViewRequest = emitViewRequestHandler
         client3.emitSideEffect = emitSideEffectHandler
         client3.emitLocalEffect = localSideEffectHandler
@@ -136,6 +139,15 @@ class SDUISubPub2 : SubPub<SDUIState2>(
                     key = it.id.scope,
                 )
             )
+        }
+
+        le<Nuke> {
+            client3.clear()
+            client3 = Client3().apply {
+                emitViewRequest = emitViewRequestHandler
+                emitSideEffect = emitSideEffectHandler
+                emitLocalEffect = localSideEffectHandler
+            }
         }
     }
 }
