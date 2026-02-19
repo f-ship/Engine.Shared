@@ -53,6 +53,7 @@ kotlin {
             implementation(compose.runtime)
             // I've recently added this because it was complaining material icons was missing? I think this should be extracted somewhere else
             implementation(compose.materialIconsExtended)
+            implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2")
             implementation("ship.f.engine.shared.utils:serverdrivenui")
             implementation("ship.f.engine.shared:core")
             implementation("ship.f.engine.client.utils:networking")
