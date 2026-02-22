@@ -62,7 +62,7 @@ abstract class Zone2<D : DomainEvent6>(val update: KClass<D>) {
                 sduiLog("DomainViewRequest6 $name for $initialisedInput", tag = "ZoneGraph2 > request3")
                 val sduiDomain = sduiDomainMutex.withLock {
                     sduiDomains[initialisedInput.focusDomainId] as? ComputedSduiDomain<D>
-                        ?: error("sduiDomain should exist for ${initialisedInput.focusDomainId}")
+                        ?: error("sduiDomain ${initialisedInput.focusDomainId} should exist for $initialisedInput")
                 }
                 val updatedSduiDomain = sduiDomain.copy(
                     sdui = update(input = initialisedInput, sduiDomain.sdui, sduiDomain.domain)
@@ -71,7 +71,6 @@ abstract class Zone2<D : DomainEvent6>(val update: KClass<D>) {
             }
 
             is TrivialViewRequest6 -> {
-                sduiLog("TrivialViewRequest6 $name for $initialisedInput", tag = "ZoneGraph2 > request3")
                 initialisedInput.id.scopes.forEach {
                     val domainInput = DomainViewRequest6(
                         id = Id2.ZoneId2(
@@ -86,7 +85,6 @@ abstract class Zone2<D : DomainEvent6>(val update: KClass<D>) {
                         focusDomainId = it
                     )
 
-                    sduiLog("TrivialViewRequest6 $name for $domainInput", tag = "ZoneGraph2 > request3 > scopes > $it")
                     when (val sduiDomain = sduiDomainMutex.withLock { sduiDomains[it] }) {
                         is ComputedSduiDomain<D> -> request3(domainInput)
                         is FailedSduiDomain<D> -> Unit // For now do nothing
