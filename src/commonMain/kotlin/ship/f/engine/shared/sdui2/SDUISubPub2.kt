@@ -100,7 +100,7 @@ class SDUISubPub2 : SubPub<SDUIState2>(
         } ?: state.value
 
         le<SDUIInput2> {
-            sduiLog("Received SDUIInput2 event ${it.id}", tag = "SDUISubPub > SDUIInput2")
+            sduiLog("Received SDUIInput2 event ${it.id}:${it.states.firstOrNull()?.id}:${it.states.size}", tag = "SDUISubPub > SDUIInput2")
             try {
                 client3.run {
                     it.states.forEach { state -> initState(state = state, forceUpdate = it.forceUpdate) }
