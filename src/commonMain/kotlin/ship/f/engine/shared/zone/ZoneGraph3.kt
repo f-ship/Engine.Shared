@@ -85,6 +85,8 @@ abstract class Zone2<D : DomainEvent6>(val update: KClass<D>) {
                         requestId = initialisedInput.requestId,
                         focusDomainId = it
                     )
+
+                    sduiLog("TrivialViewRequest6 $name for $domainInput", tag = "ZoneGraph2 > request3 > scopes > $it")
                     when (val sduiDomain = sduiDomainMutex.withLock { sduiDomains[it] }) {
                         is ComputedSduiDomain<D> -> request3(domainInput)
                         is FailedSduiDomain<D> -> Unit // For now do nothing
@@ -106,7 +108,7 @@ abstract class Zone2<D : DomainEvent6>(val update: KClass<D>) {
                             } else {
                                 val pending = PendingSduiDomain<D>(domainId = it, setOf(initialisedInput.requesterId))
                                 sduiDomainMutex.withLock { sduiDomains[it] = pending }
-                                requestDomain(domainInput)
+                                publish(requestDomain(domainInput))
                             }
                         }
                     }
