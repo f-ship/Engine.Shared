@@ -16,7 +16,7 @@ import kotlin.reflect.KClass
 abstract class Zone2<D : DomainEvent6>(val update: KClass<D>) {
     abstract val name: String
     lateinit var publish: (DomainEvent6) -> Unit
-    lateinit var send: (ComputedSduiDomain<*>, String) -> Unit
+    lateinit var send: (ComputedSduiDomain<*>, String, Int) -> Unit
     var children = listOf<String>()
 
     val sduiDomains = mutableMapOf<String, SduiDomain<D>>()
@@ -48,7 +48,10 @@ abstract class Zone2<D : DomainEvent6>(val update: KClass<D>) {
             is UninitiatedViewRequest6 -> {
                 sduiLog("UninitiatedViewRequest6 $name for $input", tag = "ZoneGraph2 > request3")
                 val initiatedInput = initiateInput(input)
-                if (createOrJoinRequest(initiatedInput, publish = send)) return refs
+                initiatedInput.id.scopes.forEach { scope ->
+                    requestInvalidator["$name|$scope"] = requestInvalidator["$name|$scope"].orEmpty() + setOf(initiatedInput.requestId)
+                }
+                if (createOrJoinRequest(input = initiatedInput, publish = send)) return refs
                 else initiatedInput
             }
 
@@ -125,9 +128,7 @@ abstract class Zone2<D : DomainEvent6>(val update: KClass<D>) {
         val pendingDomain = sduiDomains[domain.domainId] as? PendingSduiDomain<D> ?: error("pending should exist for $domain")
         val sduiDomain = ComputedSduiDomain(domain, sdui, domain.domainId)
         sduiDomains[domain.domainId] = sduiDomain
-        pendingDomain.requesters.forEach {
-            request3(input.copy(requesterId = it))
-        }
+        pendingDomain.requesters.forEach { request3(input.copy(requesterId = it)) }
     }
 
     fun failedDomainRequest(input: DomainViewRequest6, domainId: String) {
@@ -191,9 +192,10 @@ abstract class Zone2<D : DomainEvent6>(val update: KClass<D>) {
 
         val requestBuilderMutex = Mutex()
         val requestBuilders = mutableMapOf<String, RequestBuilder>()
+        val requestInvalidator = mutableMapOf<String, Set<String>>() // TODO name|scope to requestId
         lateinit var internalZoneMap: Map<String, Zone2<out DomainEvent6>> // TODO make this be the source of truth and not direct state
 
-        suspend fun createOrJoinRequest(input: InitiatedViewRequest6, publish: suspend (ComputedSduiDomain<*>, String) -> Unit): Boolean {
+        suspend fun createOrJoinRequest(input: InitiatedViewRequest6, publish: suspend (ComputedSduiDomain<*>, String, Int) -> Unit): Boolean {
             requestBuilderMutex.withLock {
                 val isExistingRequest = requestBuilders[input.requestId] != null
                 if (isExistingRequest) {
@@ -214,26 +216,27 @@ abstract class Zone2<D : DomainEvent6>(val update: KClass<D>) {
         suspend fun addOutput(
             requestId: String,
             domainSdui: ComputedSduiDomain<*>,
-            publish: suspend (ComputedSduiDomain<*>, String) -> Unit
+            publish: suspend (ComputedSduiDomain<*>, String, Int) -> Unit
         ) {
             requestBuilderMutex.withLock {
-                val requestBuilder = requestBuilders[requestId] ?: error("No request builder for $requestId")
-                requestBuilders[requestId] =
-                    requestBuilder.copy(output = (requestBuilder.output + domainSdui).distinct()) // TODO is an inefficiency
-                requestBuilder.requesters.forEach { publish(domainSdui, it) }
+                val requestBuilder = requestBuilders[requestId]
+                    ?: sduiLog("request builder for $requestId has gone missing, potentially due to invalidation").let { return }
+                requestBuilders[requestId] = requestBuilder.copy(output = (requestBuilder.output + domainSdui).distinct())
+                requestBuilder.requesters.forEach { publish(domainSdui, it, requestBuilder.version) }
             }
         }
 
-        suspend fun addRequester(requestId: String, requesterId: String, publish: suspend (ComputedSduiDomain<*>, String) -> Unit) {
+        private suspend fun addRequester(requestId: String, requesterId: String, publish: suspend (ComputedSduiDomain<*>, String, Int) -> Unit) {
             val requestBuilder = requestBuilders[requestId] ?: error("No request builder for $requestId")
             requestBuilders[requestId] = requestBuilder.copy(requesters = requestBuilder.requesters + requesterId)
-            requestBuilder.output.forEach { publish(it, requesterId) }
+            requestBuilder.output.forEach { publish(it, requesterId, requestBuilder.version) }
         }
 
         data class RequestBuilder(
             val rootRequest: InitiatedViewRequest6,
             val requesters: Set<String>,
             val output: List<ComputedSduiDomain<*>>,
+            val version: Int = 1,
         )
     }
 }
