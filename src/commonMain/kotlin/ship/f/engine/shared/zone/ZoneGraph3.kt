@@ -62,7 +62,7 @@ abstract class Zone2<D : DomainEvent6>(val update: KClass<D>) {
         }
         val initialisedInput = when (input) {
             is UninitiatedViewRequest6 -> {
-                sduiLog("UninitiatedViewRequest6 $name for $input", tag = "ZoneGraph2 > request3")
+//                sduiLog("UninitiatedViewRequest6 $name for $input", tag = "ZoneGraph2 > request3")
                 val initiatedInput = initiateInput(input)
                 initiatedInput.id.scopes.forEach { scope ->
                     requestInvalidator["$name|$scope"] = requestInvalidator["$name|$scope"].orEmpty() + setOf(initiatedInput.requestId)
@@ -72,13 +72,13 @@ abstract class Zone2<D : DomainEvent6>(val update: KClass<D>) {
             }
 
             is InitiatedViewRequest6 -> {
-                sduiLog("InitiatedViewRequest6 $name for $input", tag = "ZoneGraph2 > request3")
+//                sduiLog("InitiatedViewRequest6 $name for $input", tag = "ZoneGraph2 > request3")
                 input
             }
         }
         when (initialisedInput) {
             is DomainViewRequest6 -> {
-                sduiLog("DomainViewRequest6 $name for $initialisedInput", tag = "ZoneGraph2 > request3")
+//                sduiLog("DomainViewRequest6 $name for $initialisedInput", tag = "ZoneGraph2 > request3")
                 val sduiDomain = sduiDomainMutex.withLock {
                     sduiDomains[initialisedInput.focusDomainId] as? ComputedSduiDomain<D>
                         ?: error("sduiDomain ${initialisedInput.focusDomainId} should exist for $initialisedInput")
@@ -150,7 +150,7 @@ abstract class Zone2<D : DomainEvent6>(val update: KClass<D>) {
      * Augment Request will finally send the sduis when the entire list is complete
      */
     suspend fun augmentRequest(input: DomainViewRequest6, domain: DomainEvent6) {
-        sduiLog("Augmenting request for $input with ${domain::class}", tag = "ZoneGraph2 > augmentRequest")
+//        sduiLog("Augmenting request for $input with ${domain::class}", tag = "ZoneGraph2 > augmentRequest")
         val sdui = create(domain as D, input.requestId)
         val pendingDomain = sduiDomains[domain.domainId] as? PendingSduiDomain<D> ?: error("pending should exist for $domain")
         val sduiDomain = ComputedSduiDomain(domain, sdui, domain.domainId)
