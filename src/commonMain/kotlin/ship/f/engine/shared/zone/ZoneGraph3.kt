@@ -55,7 +55,7 @@ abstract class Zone2<D : DomainEvent6>(val update: KClass<D>) {
             when(sduiDomains[scope]){
                 is FailedSduiDomain<*> -> null
                 is ComputedSduiDomain<*>, is PendingSduiDomain<*>, null -> RefState2(
-                    id = Id2.StateId2(name = input.id.name, scope = scope, isGlobal = true),
+                    id = Id2.StateId2(name = input.id.name, scope = scope, isGlobal = true, alias = input.id.alias),
                     fallback = fallbackUI
                 )
             }
